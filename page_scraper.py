@@ -4,13 +4,17 @@ from bs4 import BeautifulSoup
 import bs4
 import requests
 import time
-def scrapePage():
+def scrapePage(depth_limit=None):
     modifiableUrl = "https://lethamyr.com"
     base_url = "https://lethamyr.com/mymaps"
     new_page = base_url
     maps = []
+    count = 0
     while True:
+        if count == depth_limit:
+            break
         page = requests.get(new_page)
+        print(page)
         while page.status_code != 200:
                 page = requests.get(new_page)
                 print("encountered timeout!")
@@ -25,6 +29,7 @@ def scrapePage():
             
             string = rlmap.find('a', class_="image-wrapper").get('href')
             DownloadPage = requests.get(modifiableUrl + string)
+            print(DownloadPage)
             while DownloadPage.status_code != 200:
                 DownloadPage = requests.get(modifiableUrl + string)
                 print("encountered timeout!")
@@ -58,4 +63,5 @@ def scrapePage():
             break
         new_page = f"{modifiableUrl}{href}"
         time.sleep(1.5)
+        count +=1
     return maps
