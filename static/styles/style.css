@@ -46,6 +46,8 @@ p {
 img {
   border-radius: 5px;
   max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   height: auto;
   display: block;
 }
@@ -111,6 +113,7 @@ img {
   background-color: #3d3d3d;
   border-radius: 5px;
   text-align: center;
+  width: 23%;
 }
 .topnav {
   background-color: #333;

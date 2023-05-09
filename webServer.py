@@ -1,12 +1,10 @@
 import json
 from pathlib import Path
 import pickle
-import stat
 from typing import Union
-from flask import Flask, request, render_template
+from flask import Flask, request
 from flaskwebgui import FlaskUI
 import os
-import subprocess
 os.chdir("app")
 import requests
 from bs4 import BeautifulSoup
@@ -248,25 +246,30 @@ if os.path.exists(Path.cwd().__str__() + fr"\backup\Labs_Underpass_P.upk") == Fa
     shutil.copy(mapPath, fr"{fileDirectory}\backup\Labs_Underpass_P.upk")
     print("copying map")
 print("acquiring maps.. please wait..")
+rlmus = []
 if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.pkl"):
     cachedMapsAge = time.time() - os.path.getmtime(fr"{Path.cwd().__str__()}/cached_maps.pkl")
     if cachedMapsAge >= 1209600:
         print("cached maps are too old, manually re-scraping.")
         maps = scrapePage()
         rlmus = getRocketLeagueMapsUSMaps()
-        combinedMaps = maps.extend(rlmus)
+        combinedMaps = maps + rlmus
         with open("cached_maps.pkl", "wb") as handle:
             handle.write(pickle.dumps(combinedMaps))
     else:
+        print("found existing maps cache")
         with open("cached_maps.pkl", "rb") as handle:
             maps = pickle.loads(handle.read())
 else:
     print("no cached maps found, manually scraping.")
     maps = scrapePage()
+    print("acquiring jetfox maps")
     rlmus = getRocketLeagueMapsUSMaps()
     combinedMaps = maps.extend(rlmus)
     with open("cached_maps.pkl", "wb") as handle:
         handle.write(pickle.dumps(combinedMaps))
+rlmus = getRocketLeagueMapsUSMaps()
+combinedMaps = maps + rlmus
 @app.route("/", methods=['GET'])
 def startPage():
     formattedMaps = [format_map(customMap=customMap) for customMap in combinedMaps]
