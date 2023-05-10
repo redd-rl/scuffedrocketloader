@@ -1,0 +1,30 @@
+body {
+    background-color: #262626;
+  }
+  h1 {
+    color: white;
+    font-family: 'Lexend';
+    z-index: 2;
+  }
+  .holder{
+      width: 100%;
+      height: 100%;
+      position: relative;
+  }
+  .exit {
+    display: none;
+  }
+  iframe{
+    height: 100vh;
+    width: 100vh;
+  }
+  
+  .bar{
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+  }
+  
+  

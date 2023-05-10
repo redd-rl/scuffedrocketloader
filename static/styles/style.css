@@ -1,5 +1,114 @@
 body {
   background-color: #262626;
+  margin-top: 120px;
+}
+#alertbox {
+  width: 50%;
+  height: 20%;
+  background-color: #3d3d3d;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+}
+#overlay {
+  justify-content: center;
+  align-items: center;
+  position: fixed; /* Sit on top of the page content */
+  display: flex; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  /* Specify a stack order in case you're using a different order for other elements */
+  cursor: pointer; /* Add a pointer on hover */
+}
+#alertbox > h1 {
+  color: white;
+  display: flex;
+  float: none;
+  text-align: center;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: auto;
+  flex-direction: row;
+  margin-right: auto;
+  
+}
+#alertbox > button {
+  border: 8px;
+  flex-direction: row;
+  vertical-align: middle;
+  border-radius: 5px;
+  background-color: dimgray;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  align-items: center;
+  text-decoration: none;
+  display: flex;
+  font-size: 16px;
+  float: none;
+  margin: 0 auto;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.topnav {
+  background-color: #333;
+  overflow: hidden;
+  place-items: center;
+  position: fixed; /* Set the navbar to fixed position */
+  top: 0; /* Position the navbar at the top of the page */
+  width: 100%; /* Full width */
+}
+.search-container {
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+  width: auto;
+}
+.search-icon {
+  position: relative;
+  display: inline-block;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+}
+.search-bar {
+  color: black;
+  font-family: 'Lexend';
+  font-size: 25px;
+  letter-spacing: 3px;
+  margin: 0 auto;
+  position: center;
+  background-color: lightgray;
+  width: 35%;
+  text-align: center;
+  border-radius: 25px;
+  display: inline-block;
+}
+.active {
+  color: white;
+  display: block;
+  float: none;
+  font-family: 'Lexend';
+  font-size: 25px;
+  letter-spacing: 3px;
+  text-align: center;
+}
+h1 {
+  color: white;
+  font-family: 'Lexend';
+  float: left;
+  display: inline;
+  padding-left: 20px;
+  letter-spacing: 3px;
 }
 .grid {
         justify-content: center;
@@ -11,14 +120,7 @@ body {
  gap: 25px;
  padding: 10px;
 }
-h1 {
-  color: white;
-  font-family: 'Lexend';
-  float: left;
-  display: inline;
-  padding-left: 20px;
-  letter-spacing: 3px;
-}
+
 h2 {
   color: white;
   float: right;
@@ -26,13 +128,6 @@ h2 {
   padding-right: 20px;
   font-family: 'Lexend';
   letter-spacing: 3px;
-}
-.active {
-  color: white;
-  font-family: 'Lexend';
-  font-size: 25px;
-  letter-spacing: 3px;
-  text-align: center;
 }
 button {
   font-family: 'Lexend';
@@ -54,7 +149,12 @@ img {
 .download-button:hover {background-color: #3e8e41}
 .delete-button:hover {background-color: #d41c1c}
 .load-button:hover {background-color: #3656c9}
-
+.restore-button:hover {background-color: #e6ce32}
+.restore-button:active {
+  background-color: #ccb72d;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
+}
 .download-button:active {
   background-color: #2f6a31;
   box-shadow: 0 5px #666;
@@ -96,6 +196,21 @@ img {
   margin: 4px 2px;
   cursor: pointer;
 }
+.restore-button {
+  border: 8px;
+  border-radius: 5px;
+  background-color: dimgray;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  float: right;
+  margin-right: 50px;
+  margin-top: 20px;
+  display: block;
+  font-size: 16px;
+  position: absolute;
+}
 .download-button {
   border: 8px;
   border-radius: 5px;
@@ -114,30 +229,4 @@ img {
   border-radius: 5px;
   text-align: center;
   width: 23%;
-}
-.topnav {
-  background-color: #333;
-  overflow: hidden;
-}
-
-/* Style the links inside the navigation bar */
-.topnav a {
-  float: left;
-  color: #f2f2f2;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
-  font-size: 17px;
-}
-
-/* Change the color of links on hover */
-.topnav a:hover {
-  background-color: #ddd;
-  color: black;
-}
-
-/* Add a color to the active/current link */
-.topnav a.active {
-  background-color: #04AA6D;
-  color: white;
 }
