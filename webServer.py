@@ -265,8 +265,14 @@ if steam and epicGames:
         if gameVersion in ("steam".casefold(), "epic games".casefold(), "epicgames".casefold()):
             if gameVersion == "steam":
                 gameVersion = "steam"
+                gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
+                mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+                break
             elif gameVersion in ("epic games".casefold(), "epicgames".casefold()):
                 gameVersion = "epicgames"
+                gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
+                mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+                break
 elif steam:
     gameVersion = "steam"
     gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
@@ -292,7 +298,7 @@ else:
                 #print("That's a valid Rocket League path, thank you!")
                 break
     gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
-    mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+    mapPath = customPath + r"\\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
 #print(f"Chosen game version is {'Steam' if steam else 'Epic Games'}")
 #print(f"Rocket League path is: {gamePath}")
 #print(mapPath)
