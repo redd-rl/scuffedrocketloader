@@ -31,4 +31,7 @@ def startPage():
 def close_window():
     close_application()
 if __name__ == "__main__":
-    FlaskUI(app=app, browser_path="C:\Program Files\Google\Chrome\Application\chrome.exe", server="flask", port=3000).run()
+    try:
+        FlaskUI(app=app, browser_path="C:\Program Files\Google\Chrome\Application\chrome.exe", server="flask", port=3000).run()
+    except FileNotFoundError:
+        FlaskUI(app=app, server="flask", port=3000).run()

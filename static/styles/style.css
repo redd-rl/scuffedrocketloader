@@ -132,6 +132,7 @@ h2 {
 button {
   font-family: 'Lexend';
 }
+
 p {
   color: white;
   font-family: 'Lexend';
@@ -141,6 +142,7 @@ p {
 img {
   border-radius: 5px;
   max-width: 100%;
+  width: 100%;
   margin-left: auto;
   margin-right: auto;
   height: auto;
@@ -210,6 +212,17 @@ img {
   display: block;
   font-size: 16px;
   position: absolute;
+}
+.downloadtext {
+  float: right;
+  margin-right: 30px;
+}
+.downloadbox {
+  display: inline-block;
+  padding: 15px 32px;
+  float: right;
+  margin-top: 20px;
+  
 }
 .download-button {
   border: 8px;

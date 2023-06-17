@@ -113,7 +113,7 @@ def cleanHTML(html):
         pass
     return cleantext
 def format_map(customMap: dict):
-    return f"""<div class="grid-container">
+    return f"""<div id="{customMap.get('path')}" class="grid-container">
     <article class="grid-item">
       <a class="grid-item-image">
         <img src="{customMap.get('img')}">
@@ -157,6 +157,10 @@ def getBasePage():
     <form action="http://127.0.0.1:5757/receiver" method="post" target="post-receiver">
             <button class="restore-button" name="restore" type="submit" value="restore"> Restore Underpass
             </button>
+            </form>
+        <p class="downloadtext">Display downloaded maps</p>
+<form target="post-receiver">
+<input type="checkbox" onclick="displayDownloaded()" id="downloaded" class="downloadbox">
             </form>
     <h1 class="active">Redd's scuffed map loader</h1>
     <tr>
@@ -265,14 +269,8 @@ if steam and epicGames:
         if gameVersion in ("steam".casefold(), "epic games".casefold(), "epicgames".casefold()):
             if gameVersion == "steam":
                 gameVersion = "steam"
-                gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
-                mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
-                break
             elif gameVersion in ("epic games".casefold(), "epicgames".casefold()):
                 gameVersion = "epicgames"
-                gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
-                mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
-                break
 elif steam:
     gameVersion = "steam"
     gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
@@ -298,7 +296,7 @@ else:
                 #print("That's a valid Rocket League path, thank you!")
                 break
     gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
-    mapPath = customPath + r"\\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+    mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
 #print(f"Chosen game version is {'Steam' if steam else 'Epic Games'}")
 #print(f"Rocket League path is: {gamePath}")
 #print(mapPath)
@@ -399,6 +397,7 @@ def getFeedback(type):
         </div>
         `  
         parent.document.body.appendChild(div)</script>"""
+    
 @app.route("/", methods=['GET'])
 def startPage():
     try:
@@ -410,6 +409,10 @@ def startPage():
     half2 = getBasePage()[1]
     fullPage = half1 + ''.join(formattedMaps) + half2
     return fullPage
+
+@app.route("/maplist", methods=['GET'])
+def maplist():
+    return os.listdir(Path.cwd().__str__() + '\\maps')
 
 @app.route("/receiver", methods=['POST'])
 def getFormResponse():
@@ -446,5 +449,8 @@ def getFormResponse():
             return getFeedback("restore")
     return "true"
 if __name__ == "__main__":
-    FlaskUI(app=app, browser_path="C:\Program Files\Google\Chrome\Application\chrome.exe", server="flask", port=5757).run()
+    try:
+        FlaskUI(app=app, browser_path="C:\Program Files\Google\Chrome\Application\chrome.exe", server="flask", port=5757).run()
+    except FileNotFoundError:
+        FlaskUI(app=app, server="flask", port=5757).run()
     
