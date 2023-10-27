@@ -19,7 +19,7 @@ import logging
 import click
 with open("log.txt", "w") as handle:
     handle.write("")
-logging.basicConfig(# filename=Path.cwd().__str__() + "log.txt",
+logging.basicConfig(filename=Path.cwd().__str__() + "log.txt",
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt="%H:%M:%S",
