@@ -185,66 +185,36 @@ def getBasePage():
     </iframe>
     </div>
     </body>"""]
-def scrapePage(depth_limit=None):
-    modifiableUrl = "https://lethamyr.com"
-    base_url = "https://lethamyr.com/mymaps"
-    new_page = base_url
-    maps = []
-    count = 0
-    while True:
-        if count == depth_limit:
+def getLethamyrMaps(depth_limit=None):
+    maps = requests.get("https://lethamyr.com/api/v1/maps")
+    nextPage = 0
+    mapTotal = []
+    while nextPage != None:
+        mapsJson = json.loads(maps.text)
+        nextPage = mapsJson["links"]["next"]
+        if nextPage == None:
             break
-        page = requests.get(new_page)
-        #print(page)
-        while page.status_code != 200:
-                page = requests.get(new_page)
-                #print("encountered timeout!")
-                time.sleep(2)
-        soup = BeautifulSoup(page.text, "html.parser")
-        older_button = soup.find("div", class_="older")
-        pageMaps = soup.find_all("article", class_="blog-basic-grid--container entry blog-item")
-        for rlmap in pageMaps:        
-            string = rlmap.find('a', class_="image-wrapper").get('href')
-            DownloadPage = requests.get(modifiableUrl + string)
-            #print(DownloadPage)
-            while DownloadPage.status_code != 200:
-                DownloadPage = requests.get(modifiableUrl + string)
-                #print("encountered timeout!")
-                time.sleep(2)
-            soupp = BeautifulSoup(DownloadPage.text, "html.parser")
-            try:
-                downloadLink = soupp.find('a', class_="sqs-block-button-element--large sqs-button-element--secondary sqs-block-button-element").get('href')
-            except:
-                downloadLink = soupp.find('a',class_='sqs-block-button-element--medium sqs-button-element--primary sqs-block-button-element').get('href')
-            downloadLink = downloadLink.split('/')
-            reformattedLink = f"https://drive.google.com/u/0/uc?id={downloadLink[5]}&export=download"
-            activeMap = {
-                "name": rlmap.find('h1', class_='blog-title').find('a').text.strip(),
-                "author": "Lethamyr",
-                "identifier": string.replace("/mymaps/",""),
-                "path": string.replace("/mymaps/",""),
-                "desc": rlmap.find('div', class_='blog-excerpt').find('p').text,
-                "img": rlmap.find('div').find('img', class_='image').get('data-src'),
-                "download-url": reformattedLink,
+        for customMap in mapsJson['data']:
+            customMap: dict
+            name = customMap.get('name', None)
+            identifier: str = customMap.get('name', None).lower().replace(" ", "")
+            author = "Lethamyr"
+            downloadUrl = customMap.get("download_url", None)
+            description = customMap.get("desc", "Blank description.")
+            active = {
+                "name": name,
+                "author": author,
+                "identifier": identifier,
+                "path": "Lethamyr",
+                "desc": description,
+                "img": "https://lethamyr.com/media/logo.png",
+                "download-url": downloadUrl,
                 "rlmus": False,
             }
-            maps.append(activeMap)
-            time.sleep(1/5)
-        if older_button == None:
-            #print("could not find an older button, breaking out of loop.")
-            break
-        try:
-            href = older_button.find("a").get('href')
-        except AttributeError:
-            #print("found no button, breaking!")
-            break
-        except:
-            #print("unknown error occured")
-            break
-        new_page = f"{modifiableUrl}{href}"
-        time.sleep(1.5)
-        count +=1
-    return maps
+            mapTotal.append(active)
+        print(f"requesting {nextPage}")
+        maps = requests.get(nextPage)
+    return mapTotal
 try:
     os.mkdir("maps")
     os.mkdir("temp")
@@ -313,7 +283,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
     if cachedMapsAge >= 1209600:
         #print("cached maps are too old, manually re-scraping.")
         subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
-        maps = scrapePage()
+        maps = getLethamyrMaps()
         rlmus = getRocketLeagueMapsUSMaps()
         combinedMaps = maps + rlmus
         with open("cached_maps.json", "w") as handle:
@@ -326,7 +296,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
 else:
     #print("no cached maps found, manually scraping.")
     subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
-    maps = scrapePage()
+    maps = getLethamyrMaps()
     #print("acquiring jetfox maps")
     rlmus = getRocketLeagueMapsUSMaps()
     combinedMaps = maps + rlmus
