@@ -19,7 +19,7 @@ import logging
 import click
 with open("log.txt", "w") as handle:
     handle.write("")
-logging.basicConfig(filename=Path.cwd().__str__() + "log.txt",
+logging.basicConfig(# filename=Path.cwd().__str__() + "log.txt",
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt="%H:%M:%S",
@@ -47,9 +47,9 @@ with open("manifest.json", "r") as handle:
         if update == True:
             content = requests.get("https://github.com/redd-rl/scuffedrocketloader/releases/latest/download/ScuffedMapLoader.exe")
             with open(Path.cwd().__str__() + "/ScuffedMapLoader.exe", "wb") as handle:
-                handle.write(content.raw)
-                os.system(Path.cwd().__str__() + r"\ScuffedMapLoader.exe")
-                exit()
+                handle.write(content.content)
+            os.system(f'"{Path.cwd().__str__()}' + r'\ScuffedMapLoader.exe"')
+            exit()
         else:
             pass
 def getRocketLeagueMapsUSMaps():
@@ -228,7 +228,7 @@ def getLethamyrMaps(depth_limit=None):
                 "identifier": identifier,
                 "path": identifier,
                 "desc": description,
-                "img": "https://lethamyr.com/media/logo.png", #placeholder until lethamyr's dev team adds preview images to their API
+                "img": "https://lethamyr.com/media/logo.png",
                 "download-url": downloadUrl,
                 "source": "https://lethamyr.com/",
                 "source-plaintext": "Lethamyr.com",
