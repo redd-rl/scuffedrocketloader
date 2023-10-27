@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from tkinter import messagebox
 from typing import Union
 from flask import Flask, request, send_from_directory
 from flaskwebgui import FlaskUI
@@ -34,7 +35,23 @@ def echo(text, file=None, nl=None, err=None, color=None, **styles):
 
 click.echo = echo
 click.secho = secho
-
+with open("manifest.json", "r") as handle:
+    manifest = handle.read()
+    webManifest = requests.get("https://raw.githubusercontent.com/redd-rl/scuffedrocketloader/master/manifest.json")
+    manifestJson = json.loads(manifest)
+    webManifestJson = json.loads(webManifest.text)
+    if manifest['versionNumber'] != webManifest['versionNumber']:
+        update = messagebox.askyesno(
+            title="Outdated loader version detected.", 
+            message="Hi! We detected an outdated version of your Map Loader, would you like to download and run the installer for the latest version? Don't worry, it'll be the same as last time.\nJust with more features!")
+        if update == True:
+            content = requests.get("https://github.com/redd-rl/scuffedrocketloader/releases/latest/download/ScuffedMapLoader.exe")
+            with open(Path.cwd().__str__() + "/ScuffedMapLoader.exe", "wb") as handle:
+                handle.write(content.raw)
+                os.system(Path.cwd().__str__() + r"\ScuffedMapLoader.exe")
+                exit()
+        else:
+            pass
 def getRocketLeagueMapsUSMaps():
     empty = False
     count=1
