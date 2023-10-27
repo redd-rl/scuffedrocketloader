@@ -228,7 +228,7 @@ def getLethamyrMaps(depth_limit=None):
                 "identifier": identifier,
                 "path": identifier,
                 "desc": description,
-                "img": "https://lethamyr.com/media/logo.png",
+                "img": "https://lethamyr.com/media/logo.png", #placeholder until lethamyr's dev team adds preview images to their API
                 "download-url": downloadUrl,
                 "source": "https://lethamyr.com/",
                 "source-plaintext": "Lethamyr.com",
