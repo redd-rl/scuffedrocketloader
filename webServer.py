@@ -40,7 +40,7 @@ with open("manifest.json", "r") as handle:
     webManifest = requests.get("https://raw.githubusercontent.com/redd-rl/scuffedrocketloader/master/manifest.json")
     manifestJson = json.loads(manifest)
     webManifestJson = json.loads(webManifest.text)
-    if manifest['versionNumber'] != webManifest['versionNumber']:
+    if manifestJson['versionNumber'] != webManifestJson['versionNumber']:
         update = messagebox.askyesno(
             title="Outdated loader version detected.", 
             message="Hi! We detected an outdated version of your Map Loader, would you like to download and run the installer for the latest version? Don't worry, it'll be the same as last time.\nJust with more features!")
@@ -229,7 +229,6 @@ def getLethamyrMaps(depth_limit=None):
                 "rlmus": False,
             }
             mapTotal.append(active)
-        print(f"requesting {nextPage}")
         maps = requests.get(nextPage)
     return mapTotal
 try:
@@ -256,8 +255,10 @@ if steam and epicGames:
         if gameVersion in ("steam".casefold(), "epic games".casefold(), "epicgames".casefold()):
             if gameVersion == "steam":
                 gameVersion = "steam"
+                break
             elif gameVersion in ("epic games".casefold(), "epicgames".casefold()):
                 gameVersion = "epicgames"
+                break
 elif steam:
     gameVersion = "steam"
     gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
@@ -299,7 +300,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
     cachedMapsAge = time.time() - os.path.getmtime(fr"{Path.cwd().__str__()}/cached_maps.json")
     if cachedMapsAge >= 1209600:
         #print("cached maps are too old, manually re-scraping.")
-        # subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+        subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
         maps = getLethamyrMaps()
         rlmus = getRocketLeagueMapsUSMaps()
         combinedMaps = maps + rlmus
@@ -312,7 +313,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
             combinedMaps = maps
 else:
     #print("no cached maps found, manually scraping.")
-    # subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+    subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
     maps = getLethamyrMaps()
     #print("acquiring jetfox maps")
     rlmus = getRocketLeagueMapsUSMaps()
