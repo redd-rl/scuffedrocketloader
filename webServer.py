@@ -58,6 +58,7 @@ def getRocketLeagueMapsUSMaps():
     mapInfo = []
     while not empty:
         maps = requests.get(f"https://celab.jetfox.ovh/api/v4/projects/?page={count}")
+        log.info(f"requesting https://celab.jetfox.ovh/api/v4/projects/?page={count}")
         count += 1
         #print(count)
         mapsJson = json.loads(maps.text)
@@ -84,6 +85,8 @@ def getRocketLeagueMapsUSMaps():
                     "path": path,
                     "desc": desc,
                     "img": imageUrl,
+                    "source": "https://rocketleaguemaps.us/",
+                    "source-plaintext": "rocketleaguemaps.us",
                     "download-url": downloadUrl,
                     "rlmus": True,
                 }
@@ -161,6 +164,7 @@ def format_map(customMap: dict):
             Delete
             </button>
         </form> 
+    <a href="{customMap.get('source')}" target="_blank" style="position: relative;color: fff;font-family: 'Lexend';text-decoration: None;text-align: left;margin-right: 75%;margin-bottom: 10%;">{customMap.get('source-plaintext')}</a>
       </article>
       </div>"""
 def getBasePage():
@@ -214,22 +218,26 @@ def getLethamyrMaps(depth_limit=None):
         for customMap in mapsJson['data']:
             customMap: dict
             name = customMap.get('name', None)
-            identifier: str = customMap.get('name', None).lower().replace(" ", "")
+            identifier: str = name.lower().replace(" ", "")
             author = "Lethamyr"
             downloadUrl = customMap.get("download_url", None)
-            description = customMap.get("desc", "Blank description.")
+            description = customMap.get("description", "Blank description.")
             active = {
                 "name": name,
                 "author": author,
                 "identifier": identifier,
-                "path": "Lethamyr",
+                "path": identifier,
                 "desc": description,
                 "img": "https://lethamyr.com/media/logo.png",
                 "download-url": downloadUrl,
+                "source": "https://lethamyr.com/",
+                "source-plaintext": "Lethamyr.com",
                 "rlmus": False,
             }
             mapTotal.append(active)
+        log.info(f"requesting {nextPage}")
         maps = requests.get(nextPage)
+    mapTotal.reverse()
     return mapTotal
 try:
     os.mkdir("maps")
