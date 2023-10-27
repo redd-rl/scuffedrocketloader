@@ -299,7 +299,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
     cachedMapsAge = time.time() - os.path.getmtime(fr"{Path.cwd().__str__()}/cached_maps.json")
     if cachedMapsAge >= 1209600:
         #print("cached maps are too old, manually re-scraping.")
-        subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+        # subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
         maps = getLethamyrMaps()
         rlmus = getRocketLeagueMapsUSMaps()
         combinedMaps = maps + rlmus
@@ -312,7 +312,7 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
             combinedMaps = maps
 else:
     #print("no cached maps found, manually scraping.")
-    subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+    # subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
     maps = getLethamyrMaps()
     #print("acquiring jetfox maps")
     rlmus = getRocketLeagueMapsUSMaps()
