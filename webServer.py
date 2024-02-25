@@ -19,7 +19,7 @@ import logging
 import click
 with open("log.txt", "w") as handle:
     handle.write("")
-logging.basicConfig(filename=Path.cwd().__str__() + "log.txt",
+logging.basicConfig(# filename=Path.cwd().__str__() + "log.txt",
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt="%H:%M:%S",
@@ -35,62 +35,69 @@ def echo(text, file=None, nl=None, err=None, color=None, **styles):
 
 click.echo = echo
 click.secho = secho
-with open("manifest.json", "r") as handle:
-    manifest = handle.read()
-    webManifest = requests.get("https://raw.githubusercontent.com/redd-rl/scuffedrocketloader/master/manifest.json")
-    manifestJson = json.loads(manifest)
-    webManifestJson = json.loads(webManifest.text)
-    if manifestJson['versionNumber'] != webManifestJson['versionNumber']:
-        update = messagebox.askyesno(
-            title="Outdated loader version detected.", 
-            message="Hi! We detected an outdated version of your Map Loader, would you like to download and run the installer for the latest version? Don't worry, it'll be the same as last time.\nJust with more features!")
-        if update == True:
-            content = requests.get("https://github.com/redd-rl/scuffedrocketloader/releases/latest/download/ScuffedMapLoader.exe")
-            with open(Path.cwd().__str__() + "/ScuffedMapLoader.exe", "wb") as handle:
-                handle.write(content.content)
-            os.system(f'"{Path.cwd().__str__()}' + r'\ScuffedMapLoader.exe"')
-            exit()
-        else:
-            pass
+try:
+    with open("manifest.json", "r") as handle:
+        manifest = handle.read()
+        webManifest = requests.get("https://raw.githubusercontent.com/redd-rl/scuffedrocketloader/master/manifest.json")
+        manifestJson = json.loads(manifest)
+        webManifestJson = json.loads(webManifest.text)
+        if manifestJson['versionNumber'] != webManifestJson['versionNumber']:
+            update = messagebox.askyesno(
+                title="Outdated loader version detected.", 
+                message="Hi! We detected an outdated version of your Map Loader, would you like to download and run the installer for the latest version? Don't worry, it'll be the same as last time.\nJust with more features!")
+            if update == True:
+                content = requests.get("https://github.com/redd-rl/scuffedrocketloader/releases/latest/download/ScuffedMapLoader.exe")
+                os.remove(Path.cwd().parent().__str__())
+                with open(Path.cwd().__str__() + "/ScuffedMapLoader.exe", "wb") as handle:
+                    handle.write(content.content)
+                os.system(f'"{Path.cwd().__str__()}' + r'\ScuffedMapLoader.exe"')
+                exit()
+            else:
+                pass
+except:
+    pass
 def getRocketLeagueMapsUSMaps():
     empty = False
     count=1
     mapInfo = []
     while not empty:
-        maps = requests.get(f"https://celab.jetfox.ovh/api/v4/projects/?page={count}")
-        log.info(f"requesting https://celab.jetfox.ovh/api/v4/projects/?page={count}")
-        count += 1
-        #print(count)
-        mapsJson = json.loads(maps.text)
-        #print(mapsJson if len(str(mapsJson)) >= 50 else None)
-        #print(mapsJson == [])
-        if mapsJson == []:
-            empty=True
-            return mapInfo
-        for customMap in mapsJson:
-            customMap: dict
-            identifier = customMap.get('id', None)
-            name = customMap.get('name', 'Unidentifiable')
-            desc = customMap.get('description', 'Could not get description.')
-            path = customMap.get('path', 'Unidentifiable')
-            linkResponse = requests.get(f"https://celab.jetfox.ovh/api/v4/projects/{identifier}/releases")
-            linkResponseJson = json.loads(linkResponse.text)
-            downloadUrl = linkResponseJson[0]['assets']['links'][0]['direct_asset_url'] if linkResponseJson[0]['assets']['links'][0]['link_type'] == "other" else linkResponseJson[0]['assets']['links'][1]['direct_asset_url']
-            imageUrl = linkResponseJson[0]['assets']['links'][0]['direct_asset_url'] if linkResponseJson[0]['assets']['links'][0]['link_type'] == "image" else linkResponseJson[0]['assets']['links'][1]['direct_asset_url']
-            author = linkResponseJson[0]['author']['name']
-            activeMap = {
-                    "name": name,
-                    "author": author,
-                    "identifier": identifier,
-                    "path": path,
-                    "desc": desc,
-                    "img": imageUrl,
-                    "source": "https://rocketleaguemaps.us/",
-                    "source-plaintext": "rocketleaguemaps.us",
-                    "download-url": downloadUrl,
-                    "rlmus": True,
-                }
-            mapInfo.append(activeMap)
+        try:
+            maps = requests.get(f"https://celab.jetfox.ovh/api/v4/projects/?page={count}")
+            log.info(f"requesting https://celab.jetfox.ovh/api/v4/projects/?page={count}")
+            count += 1
+            #print(count)
+            mapsJson = json.loads(maps.text)
+            #print(mapsJson if len(str(mapsJson)) >= 50 else None)
+            #print(mapsJson == [])
+            if mapsJson == []:
+                empty=True
+                return mapInfo
+            for customMap in mapsJson:
+                customMap: dict
+                identifier = customMap.get('id', None)
+                name = customMap.get('name', 'Unidentifiable')
+                desc = customMap.get('description', 'Could not get description.')
+                path = customMap.get('path', 'Unidentifiable')
+                linkResponse = requests.get(f"https://celab.jetfox.ovh/api/v4/projects/{identifier}/releases")
+                linkResponseJson = json.loads(linkResponse.text)
+                downloadUrl = linkResponseJson[0]['assets']['links'][0]['direct_asset_url'] if linkResponseJson[0]['assets']['links'][0]['link_type'] == "other" else linkResponseJson[0]['assets']['links'][1]['direct_asset_url']
+                imageUrl = linkResponseJson[0]['assets']['links'][0]['direct_asset_url'] if linkResponseJson[0]['assets']['links'][0]['link_type'] == "image" else linkResponseJson[0]['assets']['links'][1]['direct_asset_url']
+                author = linkResponseJson[0]['author']['name']
+                activeMap = {
+                        "name": name,
+                        "author": author,
+                        "identifier": identifier,
+                        "path": path,
+                        "desc": desc,
+                        "img": imageUrl,
+                        "source": "https://rocketleaguemaps.us/",
+                        "source-plaintext": "rocketleaguemaps.us",
+                        "download-url": downloadUrl,
+                        "rlmus": True,
+                    }
+                mapInfo.append(activeMap)
+        except:
+            pass
     return mapInfo
 def get_map(mapPageUrl: str, identifier: Union[str, int], rlmus: bool, path: str):
     if rlmus == False:
@@ -207,36 +214,40 @@ def getBasePage():
     </div>
     </body>"""]
 def getLethamyrMaps(depth_limit=None):
-    maps = requests.get("https://lethamyr.com/api/v1/maps")
-    nextPage = 0
-    mapTotal = []
-    while nextPage != None:
-        mapsJson = json.loads(maps.text)
-        nextPage = mapsJson["links"]["next"]
-        if nextPage == None:
-            break
-        for customMap in mapsJson['data']:
-            customMap: dict
-            name = customMap.get('name', None)
-            identifier: str = name.lower().replace(" ", "")
-            author = "Lethamyr"
-            downloadUrl = customMap.get("download_url", None)
-            description = customMap.get("description", "Blank description.")
-            active = {
-                "name": name,
-                "author": author,
-                "identifier": identifier,
-                "path": identifier,
-                "desc": description,
-                "img": "https://lethamyr.com/media/logo.png",
-                "download-url": downloadUrl,
-                "source": "https://lethamyr.com/",
-                "source-plaintext": "Lethamyr.com",
-                "rlmus": False,
-            }
-            mapTotal.append(active)
-        log.info(f"requesting {nextPage}")
-        maps = requests.get(nextPage)
+    try:
+        maps = requests.get("https://lethamyr.com/api/v1/maps")
+        nextPage = 0
+        mapTotal = []
+        while nextPage != None:
+            mapsJson = json.loads(maps.text)
+            nextPage = mapsJson["links"]["next"]
+            for customMap in mapsJson['data']:
+                customMap: dict
+                name = customMap.get('name', None)
+                identifier: str = name.lower().replace(" ", "")
+                author = "Lethamyr"
+                downloadUrl = customMap.get("download_url", None)
+                description = customMap.get("description", "Blank description.")
+                log.debug(f"downloaded {name}, download url '{downloadUrl}'")
+                active = {
+                    "name": name,
+                    "author": author,
+                    "identifier": identifier,
+                    "path": identifier,
+                    "desc": description,
+                    "img": "https://lethamyr.com/media/logo.png",
+                    "download-url": downloadUrl,
+                    "source": "https://lethamyr.com/",
+                    "source-plaintext": "Lethamyr.com",
+                    "rlmus": False,
+                }
+                mapTotal.append(active)
+            if nextPage == None:
+                break
+            log.info(f"requesting {nextPage}")
+            maps = requests.get(nextPage)
+    except:
+        pass
     mapTotal.reverse()
     return mapTotal
 try:
@@ -263,9 +274,13 @@ if steam and epicGames:
         if gameVersion in ("steam".casefold(), "epic games".casefold(), "epicgames".casefold()):
             if gameVersion == "steam":
                 gameVersion = "steam"
+                gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
+                mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
                 break
             elif gameVersion in ("epic games".casefold(), "epicgames".casefold()):
                 gameVersion = "epicgames"
+                gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
+                mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
                 break
 elif steam:
     gameVersion = "steam"
