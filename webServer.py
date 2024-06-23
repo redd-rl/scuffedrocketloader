@@ -9,6 +9,7 @@ from flaskwebgui import FlaskUI
 import os
 from tkinter.filedialog import askdirectory
 from tkinter.simpledialog import askstring
+from askdialog import select_platform_dialog
 os.chdir("app")
 import requests
 from bs4 import BeautifulSoup
@@ -19,6 +20,7 @@ import logging
 import click
 with open("log.txt", "w") as handle:
     handle.write("")
+
 logging.basicConfig(# filename=Path.cwd().__str__() + "log.txt",
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
@@ -180,14 +182,53 @@ def getBasePage():
     <link rel= "stylesheet" type= "text/css" href= "static/styles/style.css">
     <link rel="icon" href="static/favicon.ico">
     <script type="text/javascript" src="static/js/search.js"></script>
-    <body>
+    <script type="text/javascript" src="static/js/settings_handler.js"></script>
+    <body onload="closeSettingsDialog();">
+            <div id="overlay" class="overlay">
+        <div class="dialog-box">
+            <h1 class="settingsTitle" style="
+                float: none;
+            ">Settings</h1>
+            <!-- Settings form -->
+            <form action="http://127.0.0.1:5757/receive_settings" method="post" enctype="multipart/form-data" target="post-receiver" style="
+                font-family:  'Lexend';
+                color: white;">
+                <label for="platformSelect">Platform:</label>
+                    <select id="platformSelect" name="platform" style="
+                    font-family: 'Lexend';">
+                    <option value="epicgames">Epic Games</option></select>
+                    <option value="steam">Steam</option>
+                    <br>
+                    <br>
+                    <label for="fileInput">Browse to RocketLeague.exe File:</label>
+                    <br>
+                    <h2 style="
+                        font-size: 16px;
+                    ">Will ask for filepath when submit button is pressed.</h2>
+                    <br>
+                    <h2 style="
+                        font-size: 16px;
+                    ">If no windows pop up, check your desktop or start minimizing windows. It will appear.</h2>
+                            <br><br>
+                            <!-- Submit button to post the form data -->
+                            <button type="submit" class="download-button" style="
+                                float: right;" onclick="closeSettingsDialog()">Submit</button>
+                            <button class="restore-button btn" onclick="closeSettingsDialog()" style="
+                                float: left;">Cancel</button>
+                        </form>                       
+            <!-- Button to close the dialog -->
+        </div>
+    </div>
     <div class="topnav">
     <form action="http://127.0.0.1:5757/receiver" method="post" target="post-receiver">
             <button class="restore-button" name="restore" type="submit" value="restore"> Restore Underpass
             </button>
             </form>
-        <p class="downloadtext">Display downloaded maps</p>
+    <button class="download-button btn" onclick="openSettingsDialog()" style="
+        margin-left: 220px;
+    ">Open Settings</button>
 <form target="post-receiver">
+<p class="downloadtext">Display downloaded maps</p>
 <input type="checkbox" onclick="displayDownloaded()" id="downloaded" class="downloadbox">
             </form>
     <h1 class="active">Redd's scuffed map loader</h1>
@@ -221,6 +262,8 @@ def getLethamyrMaps(depth_limit=None):
         while nextPage != None:
             mapsJson = json.loads(maps.text)
             nextPage = mapsJson["links"]["next"]
+            if nextPage == None:
+                break
             for customMap in mapsJson['data']:
                 customMap: dict
                 name = customMap.get('name', None)
@@ -228,7 +271,6 @@ def getLethamyrMaps(depth_limit=None):
                 author = "Lethamyr"
                 downloadUrl = customMap.get("download_url", None)
                 description = customMap.get("description", "Blank description.")
-                log.debug(f"downloaded {name}, download url '{downloadUrl}'")
                 active = {
                     "name": name,
                     "author": author,
@@ -242,8 +284,6 @@ def getLethamyrMaps(depth_limit=None):
                     "rlmus": False,
                 }
                 mapTotal.append(active)
-            if nextPage == None:
-                break
             log.info(f"requesting {nextPage}")
             maps = requests.get(nextPage)
     except:
@@ -260,54 +300,68 @@ app = Flask(__name__, static_folder=Path.cwd().__str__() + fr"\static")
 epicGames = False
 steam = False
 fileDirectory = Path.cwd()
-#print("searching for rocket league...")
-if os.path.exists(r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"):
-    #print("Found Epic Games Rocket League")
-    epicGames = True
-if os.path.exists(r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"):
-    #print("Found Steam Rocket League")
-    steam = True
-if steam and epicGames:
-    #print("Found both Steam and Epic Games Rocket League installations, which one would you like to load maps to?\n")
-    while True:
-        gameVersion = askstring(prompt="Found both Steam and Epic Games Rocket League installations, which one would you like to load maps to? (Type steam or epic games)",title="Enter a string:")
-        if gameVersion in ("steam".casefold(), "epic games".casefold(), "epicgames".casefold()):
-            if gameVersion == "steam":
+if os.path.exists(Path.cwd() / "config.json"):
+    with open(Path.cwd() / "config.json", "r") as handle:
+        configuration = json.loads(handle.read())
+        mapPath = configuration['mapPath']
+        gamePath = configuration['gamePath']
+        gameVersion = configuration['gameVersion']
+        steam = True if gameVersion == "steam" else False
+        epicGames = True if gameVersion == "epicgames" else False
+else:
+    #print("searching for rocket league...")
+    if os.path.exists(r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"):
+        #print("Found Epic Games Rocket League")
+        epicGames = True
+    if os.path.exists(r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"):
+        #print("Found Steam Rocket League")
+        steam = True
+    if steam and epicGames:
+        #print("Found both Steam and Epic Games Rocket League installations, which one would you like to load maps to?\n")
+        while True:
+            gameVersion = select_platform_dialog()
+            if gameVersion == "Steam":
                 gameVersion = "steam"
                 gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
                 mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
                 break
-            elif gameVersion in ("epic games".casefold(), "epicgames".casefold()):
+            elif gameVersion == "Epic Games":
                 gameVersion = "epicgames"
                 gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
                 mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
                 break
-elif steam:
-    gameVersion = "steam"
-    gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
-    mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
-elif epicGames:
-    gameVersion = "epicgames"
-    gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
-    mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
-else:
-    #print("Found no installation,")
-    customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\'")
-    if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
-        #print("That's a valid Rocket League path, thank you!")
-        pass
+    elif steam:
+        gameVersion = "steam"
+        gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
+        mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+    elif epicGames:
+        gameVersion = "epicgames"
+        gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
+        mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
     else:
-        while True:
-            #print("That wasn't a valid path! Try again, make sure to follow the format listed above.")
-            customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\', if you opened this by mistake, type 'stop' to exit.")
-            if customPath.casefold() == "stop".casefold():
-                #print("exiting...")
-                exit()
-            if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
-                #print("That's a valid Rocket League path, thank you!")
-                break
-    gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
-    mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        #print("Found no installation,")
+        customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\'")
+        if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
+            #print("That's a valid Rocket League path, thank you!")
+            pass
+        else:
+            while True:
+                #print("That wasn't a valid path! Try again, make sure to follow the format listed above.")
+                customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\', if you opened this by mistake, type 'stop' to exit.")
+                if customPath.casefold() == "stop".casefold():
+                    #print("exiting...")
+                    exit()
+                if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
+                    #print("That's a valid Rocket League path, thank you!")
+                    break
+        gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
+        mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+with open(Path.cwd() / "config.json", "w") as handle:
+    handle.write(json.dumps(
+        {"gamePath": gamePath,
+         "mapPath": mapPath,
+         "gameVersion": gameVersion}
+    ))
 #print(f"Chosen game version is {'Steam' if steam else 'Epic Games'}")
 #print(f"Rocket League path is: {gamePath}")
 #print(mapPath)
@@ -408,6 +462,22 @@ def getFeedback(type):
         </div>
         `  
         parent.document.body.appendChild(div)</script>"""
+    elif type == "opensettings":
+        return """
+        <script>
+        var div = parent.document.createElement('div'); 
+        div.id = 'overlay';
+        div.innerHTML = `
+        <div id="alertbox">
+        <h1>
+        Restored Underpass
+        </h1>
+        <button type="submit" onclick="removeOverlay()">
+        Ok
+        </button>
+        </div>
+        `  
+        parent.document.body.appendChild(div)</script>"""
     
 @app.route("/", methods=['GET'])
 def startPage():
@@ -424,6 +494,24 @@ def startPage():
 @app.route("/maplist", methods=['GET'])
 def maplist():
     return os.listdir(Path.cwd().__str__() + '\\maps')
+
+@app.route("/receive_settings", methods=['POST'])
+def receive_settings():
+    if request.method == "POST":
+        customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\'")
+        global gamePath
+        gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
+        global mapPath
+        mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        if "platformSelect" in request.form.keys():
+            global gameVersion
+            gameVersion = request.form.get("platformSelect")
+        with open(Path.cwd() / "config.json", "w") as handle:
+            handle.write(json.dumps(
+                {"gamePath": gamePath,
+                "mapPath": mapPath,
+                "gameVersion": gameVersion}
+            ))
 
 @app.route("/receiver", methods=['POST'])
 def getFormResponse():

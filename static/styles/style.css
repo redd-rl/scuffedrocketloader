@@ -11,6 +11,27 @@ body {
   align-items: center;
   border-radius: 5px;
 }
+
+.dialog-box {
+  background-color: #3d3d3d;
+  padding: 20px;
+  border-radius: 30px;
+}
+
+.restore-button {
+  
+}
+
+.form-container {
+  display: inline-block;
+  justify-content: space-around; /* Adjust spacing between forms */
+  margin-top: 20px;
+}
+        
+/* Style for individual forms */
+.form-wrapper {
+ text-align: left; /* Center align content within each form wrapper */
+}
 #overlay {
   justify-content: center;
   align-items: center;
@@ -106,8 +127,7 @@ h1 {
   color: white;
   font-family: 'Lexend';
   float: left;
-  display: inline;
-  padding-left: 20px;
+  /* display: inline; */
   letter-spacing: 3px;
 }
 .grid {
