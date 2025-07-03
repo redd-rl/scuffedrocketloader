@@ -10,7 +10,13 @@ import os
 from tkinter.filedialog import askdirectory
 from tkinter.simpledialog import askstring
 from askdialog import select_platform_dialog
-os.chdir("app")
+if os.getlogin() == "redd":
+    DEBUG = True
+else:
+    DEBUG = False
+
+if not DEBUG:
+    os.chdir("app")
 import requests
 from bs4 import BeautifulSoup
 import zipfile
@@ -259,15 +265,11 @@ def getLethamyrMaps(depth_limit=None):
         maps = requests.get("https://lethamyr.com/api/v1/maps")
         nextPage = 0
         mapTotal = []
-        while nextPage != None:
+        while nextPage is not None:
             mapsJson = json.loads(maps.text)
-            nextPage = mapsJson["links"]["next"]
-            if nextPage == None:
-                break
             for customMap in mapsJson['data']:
-                customMap: dict
                 name = customMap.get('name', None)
-                identifier: str = name.lower().replace(" ", "")
+                identifier = name.lower().replace(" ", "")
                 author = "Lethamyr"
                 downloadUrl = customMap.get("download_url", None)
                 description = customMap.get("description", "Blank description.")
@@ -284,9 +286,12 @@ def getLethamyrMaps(depth_limit=None):
                     "rlmus": False,
                 }
                 mapTotal.append(active)
-            log.info(f"requesting {nextPage}")
-            maps = requests.get(nextPage)
-    except:
+            nextPage = mapsJson["links"]["next"]
+            if nextPage is not None:
+                log.info(f"requesting {nextPage}")
+                maps = requests.get(nextPage)
+    except Exception as e:
+        log.error(f"Error in getLethamyrMaps: {e}")
         pass
     mapTotal.reverse()
     return mapTotal
@@ -377,7 +382,10 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
     cachedMapsAge = time.time() - os.path.getmtime(fr"{Path.cwd().__str__()}/cached_maps.json")
     if cachedMapsAge >= 1209600:
         #print("cached maps are too old, manually re-scraping.")
-        subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+        if DEBUG:
+            subprocess.Popen([f"./venv/Scripts/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+        else:
+            subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
         maps = getLethamyrMaps()
         rlmus = getRocketLeagueMapsUSMaps()
         combinedMaps = maps + rlmus
@@ -390,7 +398,10 @@ if os.path.exists(fr"{Path.cwd().__str__()}/cached_maps.json"):
             combinedMaps = maps
 else:
     #print("no cached maps found, manually scraping.")
-    subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+    if DEBUG:
+        subprocess.Popen([f"./venv/Scripts/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
+    else:
+        subprocess.Popen([f"{Path.cwd().parent.__str__()}/Python310/pythonw.exe", f"{Path.cwd().__str__()}/loader.pyw"])
     maps = getLethamyrMaps()
     #print("acquiring jetfox maps")
     rlmus = getRocketLeagueMapsUSMaps()
