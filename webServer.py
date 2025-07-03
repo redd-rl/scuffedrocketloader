@@ -10,10 +10,7 @@ import os
 from tkinter.filedialog import askdirectory
 from tkinter.simpledialog import askstring
 from askdialog import select_platform_dialog
-if os.getlogin() == "redd":
-    DEBUG = True
-else:
-    DEBUG = False
+DEBUG = False
 
 if not DEBUG:
     os.chdir("app")
@@ -107,37 +104,94 @@ def getRocketLeagueMapsUSMaps():
         except:
             pass
     return mapInfo
+
+def download_gdrive_file(file_id: str, destination: str):
+    session = requests.Session()
+    URL = "https://drive.google.com/uc?export=download"
+    response = session.get(URL, params={'id': file_id}, stream=True)
+
+    # If we get a virus scan warning, parse the confirm token and new download URL
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        # Try to extract the new download URL and confirm token from the HTML
+        download_url = re.search(r'action="([^"]+)"', response.text)
+        confirm_token = re.search(r'name="confirm" value="([^"]+)"', response.text)
+        uuid = re.search(r'name="uuid" value="([^"]+)"', response.text)
+        if download_url and confirm_token and uuid:
+            download_url = download_url.group(1)
+            confirm_token = confirm_token.group(1)
+            uuid = uuid.group(1)
+            params = {
+                'id': file_id,
+                'export': 'download',
+                'confirm': confirm_token,
+                'uuid': uuid
+            }
+            # The download_url may be relative, so prepend the domain if needed
+            if download_url.startswith('/'):
+                download_url = "https://drive.usercontent.google.com" + download_url
+            response = session.get(download_url, params=params, stream=True)
+        else:
+            raise RuntimeError("Could not extract confirm token or download URL from warning page.")
+
+    if 'text/html' in response.headers.get('Content-Type', ''):
+        raise RuntimeError("Download failed: Google returned an HTML page instead of file.")
+
+    _save_response_content(response, destination)
+    print("Download successful, file saved.")
+
+def _save_response_content(response, destination):
+    CHUNK_SIZE = 32768
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk:
+                f.write(chunk)
+
 def get_map(mapPageUrl: str, identifier: Union[str, int], rlmus: bool, path: str):
-    if rlmus == False:
-        try:
-            ppage = requests.get(mapPageUrl)
-            souppp = BeautifulSoup(ppage.text, "html.parser")
-            downloadUrl = souppp.find('form', {"id": "download-form"}).get('action')
-            request = requests.get(downloadUrl)
-        except:
-            request = requests.get(mapPageUrl)
-        with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
-            handle.write(request.content)
-        try:
-            with zipfile.ZipFile(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip") as zip_ref:
-                extractPath = Path.cwd().__str__() + f"\\temp\\"
-                os.mkdir(extractPath + identifier)
-                zip_ref.extractall(extractPath + identifier)
-            foldername = os.listdir(extractPath + identifier)[0]
-            destinationPath = Path.cwd().__str__() + f"\\maps\\"
-            os.rename(extractPath + identifier + "\\" + foldername, destinationPath + identifier)
-        except zipfile.BadZipFile:
-            pass
+    def extract_gdrive_file_id(url):
+        match = re.search(r'/d/([a-zA-Z0-9_-]+)', url)
+        if match:
+            return match.group(1)
+        match = re.search(r'id=([a-zA-Z0-9_-]+)', url)
+        if match:
+            return match.group(1)
+        return None
+
+    # Check for Google Drive link
+    if "drive.google.com" in mapPageUrl:
+        file_id = extract_gdrive_file_id(mapPageUrl)
+        if file_id:
+            destination = Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip"
+            download_gdrive_file(file_id, destination)
+        else:
+            raise RuntimeError("Could not extract Google Drive file ID.")
     else:
-        request = requests.get(mapPageUrl)
-        with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
-            handle.write(request.content)
+        # Existing logic for non-GDrive links
+        if rlmus == False:
+            try:
+                ppage = requests.get(mapPageUrl)
+                souppp = BeautifulSoup(ppage.text, "html.parser")
+                downloadUrl = souppp.find('form', {"id": "download-form"}).get('action')
+                request = requests.get(downloadUrl)
+            except:
+                request = requests.get(mapPageUrl)
+            with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
+                handle.write(request.content)
+        else:
+            request = requests.get(mapPageUrl)
+            with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
+                handle.write(request.content)
+
+    # Extraction logic (same for all)
+    try:
         with zipfile.ZipFile(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip") as zip_ref:
-            extractPath = Path.cwd().__str__() + f"\\temp\\" + path
-            os.mkdir(extractPath + path)
-            zip_ref.extractall(extractPath + path)
-            destinationPath = Path.cwd().__str__() + f"\\maps\\"
-            shutil.move(extractPath + path, destinationPath + path)
+            extractPath = Path.cwd().__str__() + f"\\temp\\"
+            os.mkdir(extractPath + identifier)
+            zip_ref.extractall(extractPath + identifier)
+        foldername = os.listdir(extractPath + identifier)[0]
+        destinationPath = Path.cwd().__str__() + f"\\maps\\"
+        os.rename(extractPath + identifier + "\\" + foldername, destinationPath + identifier)
+    except zipfile.BadZipFile:
+        pass
 
 def cleanHTML(html):
     CLEANR = re.compile('<.*?>') 
