@@ -413,8 +413,8 @@ else:
                 if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
                     #print("That's a valid Rocket League path, thank you!")
                     break
-        gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
-        mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        gamePath = str(Path(customPath) / "Binaries" / "Win64" / "RocketLeague.exe")
+        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / "Labs_Underpass_P.upk")
 with open(Path.cwd() / "config.json", "w") as handle:
     handle.write(json.dumps(
         {"gamePath": gamePath,
@@ -544,6 +544,9 @@ def getFeedback(type):
         `  
         parent.document.body.appendChild(div)</script>"""
     
+
+log.info(mapPath)
+
 @app.route("/", methods=['GET'])
 def startPage():
     try:
@@ -565,9 +568,9 @@ def receive_settings():
     if request.method == "POST":
         customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\'")
         global gamePath
-        gamePath = customPath + r"Binaries\Win64\RocketLeague.exe"
+        gamePath = str(Path(customPath) / "Binaries" / "Win64" / "RocketLeague.exe")
         global mapPath
-        mapPath = customPath + r"TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / "Labs_Underpass_P.upk")
         if "platformSelect" in request.form.keys():
             global gameVersion
             gameVersion = request.form.get("platformSelect")
