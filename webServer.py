@@ -32,6 +32,9 @@ logging.basicConfig(# filename=Path.cwd().__str__() + "log.txt",
                     )
 log = logging.getLogger('werkzeug')
 
+# UNDERPASS_FILENAME = "Labs_Underpass_P.upk"
+UNDERPASS_FILENAME = "Labs_Underpass_v0_p.upk"
+
 def secho(text, file=None, nl=None, err=None, color=None, **styles):
     pass
 
@@ -46,6 +49,7 @@ try:
         webManifest = requests.get("https://raw.githubusercontent.com/redd-rl/scuffedrocketloader/master/manifest.json")
         manifestJson = json.loads(manifest)
         webManifestJson = json.loads(webManifest.text)
+        UNDERPASS_FILENAME = webManifestJson['labs_p_underpass_filename']
         if manifestJson['versionNumber'] != webManifestJson['versionNumber']:
             update = messagebox.askyesno(
                 title="Outdated loader version detected.", 
@@ -156,16 +160,21 @@ def get_map(mapPageUrl: str, identifier: Union[str, int], rlmus: bool, path: str
             return match.group(1)
         return None
 
-    # Check for Google Drive link
+    # Use path for all file/folder operations
+    temp_dir = Path.cwd() / "temp"
+    maps_dir = Path.cwd() / "maps"
+    zip_path = temp_dir / f"{path}.zip"
+    extract_path = temp_dir / path
+    destination_path = maps_dir / path
+
+    # Download the zip
     if "drive.google.com" in mapPageUrl:
         file_id = extract_gdrive_file_id(mapPageUrl)
         if file_id:
-            destination = Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip"
-            download_gdrive_file(file_id, destination)
+            download_gdrive_file(file_id, str(zip_path))
         else:
             raise RuntimeError("Could not extract Google Drive file ID.")
     else:
-        # Existing logic for non-GDrive links
         if rlmus == False:
             try:
                 ppage = requests.get(mapPageUrl)
@@ -174,22 +183,29 @@ def get_map(mapPageUrl: str, identifier: Union[str, int], rlmus: bool, path: str
                 request = requests.get(downloadUrl)
             except:
                 request = requests.get(mapPageUrl)
-            with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
+            with open(zip_path, "wb") as handle:
                 handle.write(request.content)
         else:
             request = requests.get(mapPageUrl)
-            with open(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip", "wb") as handle:
+            with open(zip_path, "wb") as handle:
                 handle.write(request.content)
 
     # Extraction logic (same for all)
     try:
-        with zipfile.ZipFile(Path.cwd().__str__() + "\\temp\\" + f"{identifier}.zip") as zip_ref:
-            extractPath = Path.cwd().__str__() + f"\\temp\\"
-            os.mkdir(extractPath + identifier)
-            zip_ref.extractall(extractPath + identifier)
-        foldername = os.listdir(extractPath + identifier)[0]
-        destinationPath = Path.cwd().__str__() + f"\\maps\\"
-        os.rename(extractPath + identifier + "\\" + foldername, destinationPath + identifier)
+        with zipfile.ZipFile(zip_path) as zip_ref:
+            os.makedirs(extract_path, exist_ok=True)
+            zip_ref.extractall(extract_path)
+        # Always create a folder for this map in maps/
+        os.makedirs(destination_path, exist_ok=True)
+        # Find all .upk or .udk files in the extracted folder (recursively)
+        for root, dirs, files in os.walk(extract_path):
+            for file in files:
+                if file.lower().endswith((".upk", ".udk")):
+                    src = os.path.join(root, file)
+                    dst = os.path.join(destination_path, file)
+                    os.rename(src, dst)
+        # Optionally, clean up the extracted temp folder
+        shutil.rmtree(extract_path, ignore_errors=True)
     except zipfile.BadZipFile:
         pass
 
@@ -382,25 +398,25 @@ else:
             if gameVersion == "Steam":
                 gameVersion = "steam"
                 gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
-                mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+                mapPath = fr"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"
                 break
             elif gameVersion == "Epic Games":
                 gameVersion = "epicgames"
                 gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
-                mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+                mapPath = fr"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"
                 break
     elif steam:
         gameVersion = "steam"
         gamePath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\Binaries\Win64\RocketLeague.exe"
-        mapPath = r"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        mapPath = fr"C:\Program Files (x86)\Steam\steamapps\common\rocketleague\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"
     elif epicGames:
         gameVersion = "epicgames"
         gamePath = r"C:\Program Files\Epic Games\rocketleague\Binaries\Win64\RocketLeague.exe"
-        mapPath = r"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\Labs_Underpass_P.upk"
+        mapPath = fr"C:\Program Files\Epic Games\rocketleague\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"
     else:
         #print("Found no installation,")
         customPath = askdirectory(initialdir="C:\\", mustexist=True, title=r"Please specify the base directory to rocket league, e.g 'C:\Program Files\Epic Games\rocketleague\' or 'C:\Program Files (x86)\Steam\steamapps\common\rocketleague\'")
-        if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
+        if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"):
             #print("That's a valid Rocket League path, thank you!")
             pass
         else:
@@ -410,11 +426,11 @@ else:
                 if customPath.casefold() == "stop".casefold():
                     #print("exiting...")
                     exit()
-                if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\Labs_Underpass_P.upk"):
+                if os.path.exists(fr"{customPath}\Binaries\Win64\RocketLeague.exe") and os.path.exists(fr"{customPath}\TAGame\CookedPCConsole\{UNDERPASS_FILENAME}"):
                     #print("That's a valid Rocket League path, thank you!")
                     break
         gamePath = str(Path(customPath) / "Binaries" / "Win64" / "RocketLeague.exe")
-        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / "Labs_Underpass_P.upk")
+        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / UNDERPASS_FILENAME)
 with open(Path.cwd() / "config.json", "w") as handle:
     handle.write(json.dumps(
         {"gamePath": gamePath,
@@ -424,10 +440,10 @@ with open(Path.cwd() / "config.json", "w") as handle:
 #print(f"Chosen game version is {'Steam' if steam else 'Epic Games'}")
 #print(f"Rocket League path is: {gamePath}")
 #print(mapPath)
-#print(Path.cwd().__str__() + fr"\backup\Labs_Underpass_P.upk")
-#print(fr"{fileDirectory}\Labs_Underpass_P.upk")
-if os.path.exists(Path.cwd().__str__() + fr"\backup\Labs_Underpass_P.upk") == False:
-    shutil.copy(mapPath, fr"{fileDirectory}\backup\Labs_Underpass_P.upk")
+#print(Path.cwd().__str__() + fr"\backup\{UNDERPASS_FILENAME}")
+#print(fr"{fileDirectory}\{UNDERPASS_FILENAME}")
+if os.path.exists(Path.cwd().__str__() + fr"\backup\{UNDERPASS_FILENAME}") == False:
+    shutil.copy(mapPath, fr"{fileDirectory}\backup\{UNDERPASS_FILENAME}")
     #print("copying map")
 #print("acquiring maps.. please wait..")
 #print("attempting to close loader")
@@ -570,7 +586,7 @@ def receive_settings():
         global gamePath
         gamePath = str(Path(customPath) / "Binaries" / "Win64" / "RocketLeague.exe")
         global mapPath
-        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / "Labs_Underpass_P.upk")
+        mapPath = str(Path(customPath) / "TAGame" / "CookedPCConsole" / UNDERPASS_FILENAME)
         if "platformSelect" in request.form.keys():
             global gameVersion
             gameVersion = request.form.get("platformSelect")
@@ -587,6 +603,7 @@ def getFormResponse():
         if "load" in request.form.keys():
             if request.form.get('load') in os.listdir(Path.cwd().__str__() + "\\maps") or request.form.get('path') in os.listdir(Path.cwd().__str__() + "\\maps"):
                 rlmusS = True if request.form.get('rlmus').casefold() == "True".casefold() else False
+                # messagebox.showinfo("Current Map Path", f"The map will be loaded to:\n{mapPath}")
                 if rlmusS == True:
                     mapDirectory = os.listdir(Path.cwd().__str__() + '\\maps' + f"\\{request.form.get('path')}")
                     upkFileAvailable = any([True if filename.endswith(".udk") or filename.endswith(".upk") else False for filename in mapDirectory])
@@ -612,9 +629,10 @@ def getFormResponse():
                 shutil.rmtree(Path.cwd().__str__() + "\\maps" + f"\\{request.form.get('delete')}")
             return getFeedback("delete")
         if "download" in request.form.keys():
-            shutil.copy(Path.cwd().__str__() + '\\backup\\Labs_Underpass_P.upk', mapPath)
+            shutil.copy(Path.cwd().__str__() + f'\\backup\\{UNDERPASS_FILENAME}', mapPath)
             return getFeedback("restore")
     return "true"
+
 if __name__ == "__main__":
     try:
         FlaskUI(app=app, browser_path="C:\Program Files\Google\Chrome\Application\chrome.exe", server="flask", port=5757).run()
